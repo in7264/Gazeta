@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Створення оголошень</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0;
+    }
+    h1 {
+        text-align: center;
+        margin-top: 20px;
+    }
+    form {
+        width: 80%;
+        margin: 20px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+    input[type="text"],
+    input[type="date"],
+    textarea {
+        width: calc(100% - 20px);
+        padding: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    textarea {
+        height: 100px;
+    }
+    button {
+        background-color: #4caf50;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    #advertisements {
+        width: 80%;
+        margin: 20px auto;
+    }
+    .advertisement {
+        background-color: #fff;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+    .advertisement h3 {
+        margin-top: 0;
+    }
+    .tab {
+        overflow: hidden;
+        border: 1px solid #ccc;
+        background-color: #f1f1f1;
+        margin-top: 20px;
+    }
+    .tab button {
+        background-color: inherit;
+        float: left;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 10px 20px;
+        transition: 0.3s;
+    }
+    .tab button:hover {
+        background-color: #ddd;
+    }
+    .tab button.active {
+        background-color: #ccc;
+    }
+    .tabcontent {
+        display: none;
+        padding: 20px;
+        border-top: none;
+    }
+</style>
+</head>
+<body>
+    <h1>Створення оголошень</h1>
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'createAdvertisement')">Створення оголошення</button>
+        <button class="tablinks" onclick="openTab(event, 'viewAdvertisementsByDate')">Перегляд оголошень на день</button>
+        <button class="tablinks" onclick="openTab(event, 'viewAllAdvertisements')">Усі оголошення</button>
+    </div>
+
+    <div id="createAdvertisement" class="tabcontent">
+        <form id="advertisementForm">
+            <label for="title">Заголовок:</label>
+            <input type="text" id="title" name="title" required>
+            <label for="content">Зміст:</label>
+            <textarea id="content" name="content" required></textarea>
+            <label for="date">Дата:</label>
+            <input type="date" id="date" name="date" required>
+            <label for="endDate">Дата закінчення (опціонально):</label>
+            <input type="date" id="endDate" name="endDate">
+            <button type="submit">Створити оголошення</button>
+        </form>
+    </div>
+
+    <div id="viewAdvertisementsByDate" class="tabcontent">
+        <label for="viewDate">Оберіть дату для перегляду оголошень:</label>
+        <input type="date" id="viewDate" onchange="displayAdvertisementsByDate()">
+        <div id="advertisementsByDate"></div>
+    </div>
+
+    <div id="viewAllAdvertisements" class="tabcontent">
+        <div id="advertisements"></div>
+    </div>
+
+    <script>
+        function saveAdvertisement(advertisement) {
+            let advertisements = JSON.parse(localStorage.getItem('advertisements')) || [];
+            advertisements.push(advertisement);
+            localStorage.setItem('advertisements', JSON.stringify(advertisements));
+        }
+
+        function displayAdvertisements() {
+            let advertisements = JSON.parse(localStorage.getItem('advertisements')) || [];
+            let advertisementsDiv = document.getElementById('advertisements');
+            advertisementsDiv.innerHTML = '';
+            advertisements.forEach((advertisement, index) => {
+                advertisementsDiv.innerHTML += `
+                    <div class="advertisement" id="advertisement_${index}">
+                        <h3>${advertisement.title}</h3>
+                        <p>${advertisement.content}</p>
+                        <p>Дата: ${advertisement.date}</p>
+                        <p>Дата закінчення: ${advertisement.endDate || 'Не вказано'}</p>
+                        <button onclick="editAdvertisement(${index})">Редагувати</button>
+                        <button onclick="deleteAdvertisement(${index})">Видалити</button>
+                    </div>
+                `;
+            });
+        }
+
+        function displayAdvertisementsByDate() {
+            let advertisements = JSON.parse(localStorage.getItem('advertisements')) || [];
+            let viewDate = new Date(document.getElementById('viewDate').value);
+            let advertisementsByDateDiv = document.getElementById('advertisementsByDate');
+            advertisementsByDateDiv.innerHTML = '';
+            advertisements.forEach(advertisement => {
+                let startDate = new Date(advertisement.date);
+                let endDate = advertisement.endDate ? new Date(advertisement.endDate) : startDate;
+                if (viewDate >= startDate && viewDate <= endDate) {
+                    advertisementsByDateDiv.innerHTML += `
+                        <div class="advertisement">
+                            <h3>${advertisement.title}</h3>
+                            <p>${advertisement.content}</p>
+                            <p>Дата: ${advertisement.date}</p>
+                            <p>Дата закінчення: ${advertisement.endDate || 'Не вказано'}</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        document.getElementById('advertisementForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            let title = document.getElementById('title').value;
+            let content = document.getElementById('content').value;
+            let date = document.getElementById('date').value;
+            let endDate = document.getElementById('endDate').value;
+            let advertisement = { title, content, date, endDate };
+            saveAdvertisement(advertisement);
+            displayAdvertisements();
+            this.reset();
+        });
+
+        function openTab(event, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName('tabcontent');
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = 'none';
+            }
+            tablinks = document.getElementsByClassName('tablinks');
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(' active', '');
+            }
+            document.getElementById(tabName).style.display = 'block';
+            event.currentTarget.className += ' active';
+            if (tabName === 'viewAllAdvertisements') {
+                displayAdvertisements();
+            }
+        }
+
+        function editAdvertisement(index) {
+            let advertisements = JSON.parse(localStorage.getItem('advertisements')) || [];
+            let advertisement = advertisements[index];
+            document.getElementById('title').value = advertisement.title;
+            document.getElementById('content').value = advertisement.content;
+            document.getElementById('date').value = advertisement.date;
+            document.getElementById('endDate').value = advertisement.endDate || '';
+            advertisements.splice(index, 1);
+            localStorage.setItem('advertisements', JSON.stringify(advertisements));
+            displayAdvertisements();
+        }
+
+        function deleteAdvertisement(index) {
+            let advertisements = JSON.parse(localStorage.getItem('advertisements')) || [];
+            advertisements.splice(index, 1);
+            localStorage.setItem('advertisements', JSON.stringify(advertisements));
+            displayAdvertisements();
+        }
+
+        displayAdvertisements();
+    </script>
+</body>
+</html>
